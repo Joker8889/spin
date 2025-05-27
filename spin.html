@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Spin</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .spinner { width: 200px; height: 200px; border-radius: 50%; border: 10px solid #ccc; margin: 20px auto; position: relative; }
+        .spin-btn { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 16px; }
+        .spin-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+        #result { font-size: 24px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>Lucky Spin</h1>
+    <p>Click below to spin the wheel!</p>
+
+    <div class="spinner" id="spinner"></div>
+
+    <button class="spin-btn" id="spinBtn">Spin!</button>
+    <div id="result"></div>
+
+    <!-- Firebase JS SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+
+    <script>
+        // Firebase Configuration (ganti dengan konfigurasi Firebase Anda)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Inisialisasi Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Elemen UI
+        const spinBtn = document.getElementById('spinBtn');
+        const resultDiv = document.getElementById('result');
+        const spinner = document.getElementById('spinner');
+
+        // Membuat ID pengguna unik untuk demo
+        let userId = "user-" + Math.random().toString(36).substr(2, 9);
+
+        // Mengecek apakah pengguna sudah spin
+        database.ref('spins/' + userId).get().then((snapshot) => {
+            if (snapshot.exists()) {
+                spinBtn.disabled = true;
+                resultDiv.textContent = "You have already spun!";
+            }
+        });
+
+        // Fungsi spin
+        spinBtn.addEventListener('click', () => {
+            spinBtn.disabled = true;
+            const randomDegree = Math.floor(Math.random() * 360);
+            spinner.style.transform = `rotate(${randomDegree}deg)`; // Rotasi spinner
+
+            setTimeout(() => {
+                // Menentukan hadiah berdasarkan derajat
+                let prize = "No prize"; // Default
+                if (randomDegree >= 0 && randomDegree < 90) prize = "Prize 1";
+                if (randomDegree >= 90 && randomDegree < 180) prize = "Prize 2";
+                if (randomDegree >= 180 && randomDegree < 270) prize = "Prize 3";
+                if (randomDegree >= 270 && randomDegree < 360) prize = "Prize 4";
+
+                resultDiv.textContent = `You won: ${prize}`; // Menampilkan hadiah
+                
+                // Simpan data spin di Firebase
+                database.ref('spins/' + userId).set({
+                    prize: prize,
+                    userId: userId
+                });
+            }, 2000); // Delay 2 detik untuk efek spin
+        });
+    </script>
+</body>
+</html>
